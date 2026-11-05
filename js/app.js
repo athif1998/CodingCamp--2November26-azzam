@@ -1177,22 +1177,50 @@ const QuickLinksComponent = (function() {
   }
 
   /**
-   * Renders links as grid
-   * @returns {string} HTML for links grid
+   * Extracts the hostname from a URL for favicon lookup
+   * @param {string} url - Full URL
+   * @returns {string} Hostname or empty string on error
    */
+  function getHostname(url) {
+    try {
+      return new URL(url).hostname;
+    } catch (_) {
+      return '';
+    }
+  }
+
   function render() {
     if (!state.links || state.links.length === 0) {
       return '<div class="empty-message">No quick links yet. Add one!</div>';
     }
 
-    return state.links.map(link => `
+    return state.links.map(link => {
+      const hostname = getHostname(link.url);
+      const faviconUrl = hostname
+        ? `https://www.google.com/s2/favicons?domain=${hostname}&sz=64`
+        : '';
+      const fallbackLetter = link.label.charAt(0).toUpperCase();
+
+      return `
       <div class="link-item" data-link-id="${link.id}">
         <a href="${link.url}" target="_blank" rel="noopener noreferrer" class="link-box">
+          <div class="link-favicon-wrap">
+            ${faviconUrl
+              ? `<img
+                   class="link-favicon"
+                   src="${faviconUrl}"
+                   alt="${link.label} icon"
+                   onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+                 >
+                 <span class="link-favicon-fallback" style="display:none;">${fallbackLetter}</span>`
+              : `<span class="link-favicon-fallback">${fallbackLetter}</span>`
+            }
+          </div>
           <span class="link-label">${link.label}</span>
         </a>
-        <button class="link-delete" data-link-id="${link.id}">�</button>
-      </div>
-    `).join('');
+        <button class="link-delete" data-link-id="${link.id}" aria-label="Delete ${link.label}">&times;</button>
+      </div>`;
+    }).join('');
   }
 
   initialize();
@@ -1496,3 +1524,4 @@ if (document.readyState === 'loading') {
   // DOM already loaded
   App.initialize();
 }
+
