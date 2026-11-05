@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Modules Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        h2 {
+            color: #555;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        pre {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .summary {
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Core Modules Verification</h1>
+    
+    <div id="results"></div>
+    
+    <script src="js/app.js"></script>
+    <script>
+        // Verification Test Suite
+        const results = [];
+        
+        function addResult(testName, passed, message, details = null) {
+            results.push({ testName, passed, message, details });
+        }
+        
+        function displayResults() {
+            const container = document.getElementById('results');
+            let html = '';
+            let passCount = 0;
+            let failCount = 0;
+            
+            results.forEach(result => {
+                const statusClass = result.passed ? 'pass' : 'fail';
+                const icon = result.passed ? '✅' : '❌';
+                
+                if (result.passed) passCount++;
+                else failCount++;
+                
+                html += `
+                    <div class="test-section">
+                        <h2>${icon} ${result.testName}</h2>
+                        <div class="result ${statusClass}">
+                            ${result.message}
+                        </div>
+                        ${result.details ? `<pre>${result.details}</pre>` : ''}
+                    </div>
+                `;
+            });
+            
+            const allPassed = failCount === 0;
+            const summaryClass = allPassed ? 'pass' : 'fail';
+            const summaryIcon = allPassed ? '✅' : '❌';
+            
+            html = `
+                <div class="summary ${summaryClass}">
+                    ${summaryIcon} Tests: ${passCount} passed, ${failCount} failed (Total: ${results.length})
+                </div>
+            ` + html;
+            
+            container.innerHTML = html;
+        }
+        
+        // Test 1: EventBus exists and has correct API
+        try {
+            if (typeof EventBus !== 'undefined') {
+                if (typeof EventBus.subscribe === 'function' &&
+                    typeof EventBus.unsubscribe === 'function' &&
+                    typeof EventBus.publish === 'function') {
+                    addResult(
+                        'EventBus Module',
+                        true,
+                        'EventBus is properly defined with all required methods (subscribe, unsubscribe, publish)'
+                    );
+                } else {
+                    addResult(
+                        'EventBus Module',
+                        false,
+                        'EventBus is missing required methods',
+                        `Available methods: ${Object.keys(EventBus).join(', ')}`
+                    );
+                }
+            } else {
+                addResult(
+                    'EventBus Module',
+                    false,
+                    'EventBus is not defined in global scope'
+                );
+            }
+        } catch (error) {
+            addResult(
+                'EventBus Module',
+                false,
+                'Error checking EventBus',
+                error.toString()
+            );
+        }
+        
+        // Test 2: EventBus functionality
+        try {
+            let eventReceived = false;
+            let eventData = null;
+            
+            const testHandler = (data) => {
+                eventReceived = true;
+                eventData = data;
+            };
+            
+            EventBus.subscribe('test:event', testHandler);
+            EventBus.publish('test:event', { test: 'data' });
+            
+            setTimeout(() => {
+                if (eventReceived && eventData && eventData.test === 'data') {
+                    addResult(
+                        'EventBus Functionality',
+                        true,
+                        'EventBus successfully publishes and receives events'
+                    );
+                } else {
+                    addResult(
+                        'EventBus Functionality',
+                        false,
+                        'EventBus did not properly transmit event data',
+                        `Expected: { test: 'data' }, Received: ${JSON.stringify(eventData)}`
+                    );
+                }
+                
+                // Continue with next tests
+                testStorageManager();
+            }, 10);
+        } catch (error) {
+            addResult(
+                'EventBus Functionality',
+                false,
+                'Error testing EventBus functionality',
+                error.toString()
+            );
+            testStorageManager();
+        }
+        
+        // Test 3: StorageManager exists and has correct API
+        function testStorageManager() {
+            try {
+                if (typeof StorageManager !== 'undefined') {
+                    if (typeof StorageManager.isAvailable === 'function' &&
+                        typeof StorageManager.getTasks === 'function' &&
+                        typeof StorageManager.saveTasks === 'function' &&
+                        typeof StorageManager.getLinks === 'function' &&
+                        typeof StorageManager.saveLinks === 'function') {
+                        addResult(
+                            'StorageManager Module',
+                            true,
+                            'StorageManager is properly defined with all required methods (isAvailable, getTasks, saveTasks, getLinks, saveLinks)'
+                        );
+                    } else {
+                        addResult(
+                            'StorageManager Module',
+                            false,
+                            'StorageManager is missing required methods',
+                            `Available methods: ${Object.keys(StorageManager).join(', ')}`
+                        );
+                    }
+                } else {
+                    addResult(
+                        'StorageManager Module',
+                        false,
+                        'StorageManager is not defined in global scope'
+                    );
+                }
+            } catch (error) {
+                addResult(
+                    'StorageManager Module',
+                    false,
+                    'Error checking StorageManager',
+                    error.toString()
+                );
+            }
+            
+            // Test 4: StorageManager functionality
+            try {
+                const isAvailable = StorageManager.isAvailable();
+                const tasks = StorageManager.getTasks();
+                const links = StorageManager.getLinks();
+                
+                if (Array.isArray(tasks) && Array.isArray(links)) {
+                    addResult(
+                        'StorageManager Functionality',
+                        true,
+                        `StorageManager working correctly. Storage available: ${isAvailable}. Retrieved ${tasks.length} tasks and ${links.length} links.`
+                    );
+                } else {
+                    addResult(
+                        'StorageManager Functionality',
+                        false,
+                        'StorageManager methods did not return arrays',
+                        `getTasks returned: ${typeof tasks}, getLinks returned: ${typeof links}`
+                    );
+                }
+            } catch (error) {
+                addResult(
+                    'StorageManager Functionality',
+                    false,
+                    'Error testing StorageManager functionality',
+                    error.toString()
+                );
+            }
+            
+            testDOMController();
+        }
+        
+        // Test 5: DOMController exists and has correct API
+        function testDOMController() {
+            try {
+                if (typeof DOMController !== 'undefined') {
+                    const requiredMethods = [
+                        'createElement',
+                        'getElement',
+                        'getElements',
+                        'setText',
+                        'addClass',
+                        'removeClass',
+                        'toggleClass',
+                        'addEventListener',
+                        'clearChildren'
+                    ];
+                    
+                    const missingMethods = requiredMethods.filter(method => 
+                        typeof DOMController[method] !== 'function'
+                    );
+                    
+                    if (missingMethods.length === 0) {
+                        addResult(
+                            'DOMController Module',
+                            true,
+                            `DOMController is properly defined with all ${requiredMethods.length} required methods`
+                        );
+                    } else {
+                        addResult(
+                            'DOMController Module',
+                            false,
+                            'DOMController is missing required methods',
+                            `Missing: ${missingMethods.join(', ')}`
+                        );
+                    }
+                } else {
+                    addResult(
+                        'DOMController Module',
+                        false,
+                        'DOMController is not defined in global scope'
+                    );
+                }
+            } catch (error) {
+                addResult(
+                    'DOMController Module',
+                    false,
+                    'Error checking DOMController',
+                    error.toString()
+                );
+            }
+            
+            // Test 6: DOMController functionality
+            try {
+                const testElement = DOMController.createElement('div', 'test-class', 'Test Content');
+                
+                if (testElement && 
+                    testElement.tagName === 'DIV' && 
+                    testElement.className === 'test-class' &&
+                    testElement.textContent === 'Test Content') {
+                    addResult(
+                        'DOMController Functionality',
+                        true,
+                        'DOMController.createElement works correctly'
+                    );
+                } else {
+                    addResult(
+                        'DOMController Functionality',
+                        false,
+                        'DOMController.createElement did not create element correctly',
+                        `Element: ${testElement ? testElement.outerHTML : 'null'}`
+                    );
+                }
+            } catch (error) {
+                addResult(
+                    'DOMController Functionality',
+                    false,
+                    'Error testing DOMController functionality',
+                    error.toString()
+                );
+            }
+            
+            // Test 7: Console errors check
+            const consoleErrors = [];
+            const originalError = console.error;
+            console.error = function(...args) {
+                consoleErrors.push(args.join(' '));
+                originalError.apply(console, args);
+            };
+            
+            // Wait a bit to see if any errors appear
+            setTimeout(() => {
+                console.error = originalError;
+                
+                if (consoleErrors.length === 0) {
+                    addResult(
+                        'Console Errors',
+                        true,
+                        'No console errors detected during module loading'
+                    );
+                } else {
+                    addResult(
+                        'Console Errors',
+                        false,
+                        `${consoleErrors.length} console error(s) detected`,
+                        consoleErrors.join('\n')
+                    );
+                }
+                
+                displayResults();
+            }, 100);
+        }
+    </script>
+</body>
+</html>

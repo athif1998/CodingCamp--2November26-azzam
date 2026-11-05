@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StorageManager Test</title>
+</head>
+<body>
+  <h1>StorageManager Test</h1>
+  <div id="results"></div>
+
+  <script src="js/app.js"></script>
+  <script>
+    const resultsDiv = document.getElementById('results');
+    
+    function logResult(test, passed, details = '') {
+      const p = document.createElement('p');
+      p.style.color = passed ? 'green' : 'red';
+      p.textContent = `${passed ? '✓' : '✗'} ${test}${details ? ': ' + details : ''}`;
+      resultsDiv.appendChild(p);
+    }
+
+    // Test 1: Check if Local Storage is available
+    const isAvail = StorageManager.isAvailable();
+    logResult('Local Storage availability check', isAvail);
+
+    // Test 2: Save and retrieve tasks
+    const testTasks = [
+      {
+        id: 'task-1',
+        description: 'Test task 1',
+        completed: false,
+        timestamp: Date.now()
+      },
+      {
+        id: 'task-2',
+        description: 'Test task 2',
+        completed: true,
+        timestamp: Date.now()
+      }
+    ];
+
+    const savedTasks = StorageManager.saveTasks(testTasks);
+    logResult('Save tasks', savedTasks);
+
+    const retrievedTasks = StorageManager.getTasks();
+    const tasksMatch = JSON.stringify(testTasks) === JSON.stringify(retrievedTasks);
+    logResult('Retrieve tasks', tasksMatch, tasksMatch ? '' : 'Tasks do not match');
+
+    // Test 3: Save and retrieve links
+    const testLinks = [
+      {
+        id: 'link-1',
+        url: 'https://example.com',
+        label: 'Example Site'
+      },
+      {
+        id: 'link-2',
+        url: 'https://google.com',
+        label: 'Google'
+      }
+    ];
+
+    const savedLinks = StorageManager.saveLinks(testLinks);
+    logResult('Save links', savedLinks);
+
+    const retrievedLinks = StorageManager.getLinks();
+    const linksMatch = JSON.stringify(testLinks) === JSON.stringify(retrievedLinks);
+    logResult('Retrieve links', linksMatch, linksMatch ? '' : 'Links do not match');
+
+    // Test 4: Handle empty storage
+    localStorage.removeItem('todolist_tasks');
+    const emptyTasks = StorageManager.getTasks();
+    logResult('Empty tasks returns empty array', Array.isArray(emptyTasks) && emptyTasks.length === 0);
+
+    // Test 5: Handle corrupted JSON
+    localStorage.setItem('todolist_tasks', 'invalid json {]');
+    const corruptedTasks = StorageManager.getTasks();
+    logResult('Corrupted JSON returns empty array', Array.isArray(corruptedTasks) && corruptedTasks.length === 0);
+
+    // Test 6: Filter invalid tasks
+    const mixedTasks = [
+      {
+        id: 'valid-1',
+        description: 'Valid task',
+        completed: false,
+        timestamp: Date.now()
+      },
+      {
+        id: 'invalid-1',
+        // missing description
+        completed: false,
+        timestamp: Date.now()
+      },
+      {
+        id: 'valid-2',
+        description: 'Another valid task',
+        completed: true,
+        timestamp: Date.now()
+      }
+    ];
+    localStorage.setItem('todolist_tasks', JSON.stringify(mixedTasks));
+    const filteredTasks = StorageManager.getTasks();
+    logResult('Filter invalid tasks', filteredTasks.length === 2, `Expected 2 valid tasks, got ${filteredTasks.length}`);
+
+    // Clean up
+    localStorage.removeItem('todolist_tasks');
+    localStorage.removeItem('todolist_links');
+
+    // Summary
+    const summary = document.createElement('h2');
+    summary.textContent = 'All tests completed! Check results above.';
+    resultsDiv.appendChild(summary);
+  </script>
+</body>
+</html>

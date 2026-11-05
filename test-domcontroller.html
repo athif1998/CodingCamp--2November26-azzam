@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOMController Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .pass {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .fail {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        #test-container {
+            margin-top: 20px;
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        .highlight {
+            background-color: yellow;
+        }
+    </style>
+</head>
+<body>
+    <h1>DOMController Module Test</h1>
+    <div id="results"></div>
+    <div id="test-container"></div>
+
+    <script src="js/app.js"></script>
+    <script>
+        // Test suite for DOMController
+        const results = [];
+
+        function test(name, fn) {
+            try {
+                const result = fn();
+                results.push({ name, pass: result, error: null });
+            } catch (error) {
+                results.push({ name, pass: false, error: error.message });
+            }
+        }
+
+        // Test createElement
+        test('createElement creates element with tag', () => {
+            const el = DOMController.createElement('div');
+            return el !== null && el.tagName === 'DIV';
+        });
+
+        test('createElement adds className', () => {
+            const el = DOMController.createElement('span', 'test-class');
+            return el !== null && el.className === 'test-class';
+        });
+
+        test('createElement adds textContent', () => {
+            const el = DOMController.createElement('p', null, 'Hello World');
+            return el !== null && el.textContent === 'Hello World';
+        });
+
+        test('createElement returns null for invalid tag', () => {
+            const el = DOMController.createElement(null);
+            return el === null;
+        });
+
+        // Test getElement
+        test('getElement finds existing element', () => {
+            const el = DOMController.getElement('#test-container');
+            return el !== null && el.id === 'test-container';
+        });
+
+        test('getElement returns null for non-existent element', () => {
+            const el = DOMController.getElement('#does-not-exist');
+            return el === null;
+        });
+
+        // Test getElements
+        test('getElements returns NodeList', () => {
+            const els = DOMController.getElements('div');
+            return els.length > 0;
+        });
+
+        // Test setText
+        test('setText updates element text', () => {
+            const el = document.createElement('div');
+            const success = DOMController.setText(el, 'New Text');
+            return success && el.textContent === 'New Text';
+        });
+
+        test('setText returns false for invalid element', () => {
+            return !DOMController.setText(null, 'text');
+        });
+
+        // Test addClass
+        test('addClass adds class to element', () => {
+            const el = document.createElement('div');
+            const success = DOMController.addClass(el, 'new-class');
+            return success && el.classList.contains('new-class');
+        });
+
+        // Test removeClass
+        test('removeClass removes class from element', () => {
+            const el = document.createElement('div');
+            el.className = 'test-class';
+            const success = DOMController.removeClass(el, 'test-class');
+            return success && !el.classList.contains('test-class');
+        });
+
+        // Test toggleClass
+        test('toggleClass toggles class on element', () => {
+            const el = document.createElement('div');
+            const added = DOMController.toggleClass(el, 'toggle-class');
+            const hasClass = el.classList.contains('toggle-class');
+            const removed = !DOMController.toggleClass(el, 'toggle-class');
+            const noClass = !el.classList.contains('toggle-class');
+            return added && hasClass && removed && noClass;
+        });
+
+        // Test addEventListener
+        test('addEventListener attaches event handler', () => {
+            const el = document.createElement('button');
+            let clicked = false;
+            const handler = () => { clicked = true; };
+            const success = DOMController.addEventListener(el, 'click', handler);
+            el.click();
+            return success && clicked;
+        });
+
+        // Test clearChildren
+        test('clearChildren removes all child nodes', () => {
+            const el = document.createElement('div');
+            el.appendChild(document.createElement('span'));
+            el.appendChild(document.createElement('p'));
+            const success = DOMController.clearChildren(el);
+            return success && el.children.length === 0;
+        });
+
+        // Display results
+        const resultsContainer = document.getElementById('results');
+        const passed = results.filter(r => r.pass).length;
+        const total = results.length;
+
+        const summary = document.createElement('h2');
+        summary.textContent = `Test Results: ${passed}/${total} passed`;
+        summary.style.color = passed === total ? 'green' : 'red';
+        resultsContainer.appendChild(summary);
+
+        results.forEach(result => {
+            const div = document.createElement('div');
+            div.className = `test-result ${result.pass ? 'pass' : 'fail'}`;
+            div.textContent = `${result.pass ? '✓' : '✗'} ${result.name}`;
+            if (result.error) {
+                div.textContent += ` - Error: ${result.error}`;
+            }
+            resultsContainer.appendChild(div);
+        });
+
+        // Visual demonstration
+        const testContainer = document.getElementById('test-container');
+        testContainer.innerHTML = '<h3>Visual Demonstration</h3>';
+        
+        const demoEl = DOMController.createElement('p', 'demo-paragraph', 'This element was created using DOMController.createElement()');
+        testContainer.appendChild(demoEl);
+        
+        const button = DOMController.createElement('button', 'demo-button', 'Toggle Highlight');
+        DOMController.addEventListener(button, 'click', () => {
+            DOMController.toggleClass(demoEl, 'highlight');
+        });
+        testContainer.appendChild(button);
+    </script>
+</body>
+</html>
