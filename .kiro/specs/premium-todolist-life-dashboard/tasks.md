@@ -1,4 +1,4 @@
-﻿# Implementation Plan: Premium TodoList Life Dashboard
+# Implementation Plan: Premium TodoList Life Dashboard
 
 ## Overview
 
@@ -73,7 +73,7 @@ This implementation plan breaks down the Premium TodoList Life Dashboard into di
   - [x] 4.1 Create DOMController module with DOM manipulation utilities
 - [x] 5. Checkpoint - Verify core modules
 - [ ] 6. Implement GreetingComponent
-  - [ ] 6.1 Create GreetingComponent with date/time display
+  - [x] 6.1 Create GreetingComponent with date/time display
   - [ ] 6.2 Implement time-based greeting logic
   - [ ] 6.3 Add automatic update cycle
 - [ ] 7. Implement TimerComponent
