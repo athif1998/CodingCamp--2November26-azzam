@@ -811,10 +811,11 @@ const TimerComponent = (function() {
   'use strict';
 
   let state = {
-    timeRemaining: 1500, // 25 minutes in seconds
+    timeRemaining: 1500000, // 25 minutes in milliseconds
     isRunning: false,
     isPaused: false,
-    intervalId: null
+    intervalId: null,
+    lastTick: null
   };
 
   /**
@@ -830,13 +831,15 @@ const TimerComponent = (function() {
   }
 
   /**
-   * Formats time as MM:SS
-   * @returns {string} Formatted time
+   * Formats time as MM:SS.mmm
+   * @returns {string} Formatted time with milliseconds
    */
   function formatTime() {
-    const minutes = Math.floor(state.timeRemaining / 60);
-    const seconds = Math.floor(state.timeRemaining % 60);
-    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    const totalMs = Math.max(0, state.timeRemaining);
+    const minutes = Math.floor(totalMs / 60000);
+    const seconds = Math.floor((totalMs % 60000) / 1000);
+    const ms = Math.floor((totalMs % 1000) / 10);
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
   }
 
   /**
@@ -856,12 +859,19 @@ const TimerComponent = (function() {
     }
     state.isRunning = true;
     state.isPaused = false;
+    state.lastTick = performance.now();
 
     state.intervalId = setInterval(() => {
+      const now = performance.now();
+      const elapsed = now - state.lastTick;
+      state.lastTick = now;
+
       if (state.timeRemaining > 0) {
-        state.timeRemaining -= 1;
+        state.timeRemaining = Math.max(0, state.timeRemaining - elapsed);
         EventBus.publish('timer:tick', { timeRemaining: state.timeRemaining, display: render() });
-      } else {
+      }
+
+      if (state.timeRemaining <= 0) {
         // Timer finished
         state.isRunning = false;
         state.timeRemaining = 0;
@@ -869,9 +879,9 @@ const TimerComponent = (function() {
         state.intervalId = null;
         EventBus.publish('timer:finished', { display: render() });
         // Auto-reset to 25 minutes
-        state.timeRemaining = 1500;
+        state.timeRemaining = 1500000;
       }
-    }, 1000);
+    }, 10); // 10ms interval for smooth millisecond display
   }
 
   /**
@@ -910,9 +920,10 @@ const TimerComponent = (function() {
       state.intervalId = null;
     }
     
-    state.timeRemaining = 1500;
+    state.timeRemaining = 1500000;
     state.isRunning = false;
     state.isPaused = false;
+    state.lastTick = null;
     EventBus.publish('timer:reset', { display: render() });
   }
 
